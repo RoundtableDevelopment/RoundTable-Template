@@ -1,9 +1,14 @@
 # Overwrites Thor to use relative file paths (Not sure if needed)
 
 def source_paths
-  Array(super) + 
+  Array(super) +
     [File.expand_path(File.dirname(__FILE__))]
 end
+
+# initialize git
+
+git :init
+git add: '.', commit: '-m "Initial Commit"'
 
 # Clean slate Gemfile and default gems
 
@@ -59,11 +64,15 @@ gem_group :test do
   gem 'simplecov'
 end
 
+git add: '.', commit: '-m "Gemfile added"'
+
 # removes test directory because we are using rspec for testing
 
 after_bundle do
   remove_dir 'test'
 end
+
+# sets default postgres db
 
 inside 'config' do
   remove_file 'database.yml'
@@ -75,8 +84,8 @@ default: &default
   port: 5432
   pool: 5
   timeout: 5000
-  user: postgres
-  password: postgres
+  user: <%= ENV['postgres_user'] %>
+  password: password
 
 development:
   <<: *default
@@ -97,6 +106,15 @@ production:
   end
 end
 
+# sets up and migrates default db
+#
+rake ("db:setup")
+rake ("db:migrate")
+
+git add: '.', commit: '-m "Postgres database added"'
+
+# Devise
+
 if yes?("Do you need user authentication? (yes/no)")
   devise_model_name = ask("What do you want to call the Devise model? (default User)")
   gem 'devise'
@@ -109,6 +127,18 @@ if yes?("Do you need user authentication? (yes/no)")
   end
   generate 'devise:views'
   rake ("db:migrate")
+  git add: '.', commit: '-m "Devise authentication added"'
 end
 
+# Transactional email
+
+# Turbolinks
+
+# File uploads
+
+# Deployment options
+
+# Admin interface
+
+# React/Redux
 
