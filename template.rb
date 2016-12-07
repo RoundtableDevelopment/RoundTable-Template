@@ -134,6 +134,28 @@ end
 
 # Turbolinks
 
+if yes?("Do you want to use Turbolinks? (yes/no)")
+  gem 'turbolinks'
+  git add: '.', commit: '-m "Turbolinks added"'
+else
+  remove_file 'app/views/layouts/application.html.erb'
+  create_file 'app/views/layouts/application.html.erb' do <<-EOF
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+  </head>
+
+  <body>
+    <%= yield %>
+  </body>
+</html>
+  EOF
+  end
+  gsub_file 'app/assets/javascripts/application.js', "//= require turbolinks", ''
+  git add: '.', commit: '-m "Turbolinks removed"'
+end
+
 # File uploads
 
 # Deployment options
