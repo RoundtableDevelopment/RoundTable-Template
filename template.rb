@@ -158,7 +158,7 @@ else
 end
 
 # File uploads
-If yes?("Do you need to be able to upload files? (yes/no)")
+if yes?("Do you need to be able to upload files? (yes/no)")
   gem "paperclip", "~> 5.0.0"
   run "bundle install"
   git add: '.', commit: '-m "Paperclip added for file uploads"'
