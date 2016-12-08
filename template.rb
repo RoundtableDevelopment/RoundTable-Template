@@ -184,12 +184,13 @@ end
 #   git add: '.', commit: '-m "Capistrano deployment set up"'
 # end
 
-# # Admin interface
-# if yes?("Do you want an admin interface?")
-#   gem 'administrate'
-#   run "bundle install"
-#   git add: '.', commit: '-m "Administrate added"'
-# end
+# Admin interface
+if yes?("Do you want an admin interface?")
+  gem "administrate"
+  run "bundle install"
+  generate "administrate:install"
+  git add: '.', commit: '-m "Administrate added"'
+end
 
 
 # React/Redux
