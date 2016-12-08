@@ -69,6 +69,7 @@ remove_dir 'test'
 # sets default postgres db
 inside 'config' do
   remove_file 'database.yml'
+  create_file 'application.yml'
   create_file 'database.yml' do <<-EOF
 default: &default
   adapter: postgresql
@@ -122,16 +123,20 @@ if yes?("Do you need user authentication? (yes/no)")
 end
 
 # Transactional email
-# if yes?("Do you want to use a transactional email? (yes/no)")
-#   trans_email.downcase = ask("Which transactional email do you want to use? (mandril/sendgrid)")
-#   if trans_email == 'mandril'
-#     gem 'mandrill-api'
-#     git add: '.', commit: '-m "Mandril transactional email added"'
-#   elsif trans_email == 'sendgrid'
+# not done yet
 
-#     git add: '.', commit: '-m "SendGrid transactional email added"'
-#   end
-# end
+if yes?("Do you want to use a transactional email? (yes/no)")
+  trans_email.downcase = ask("Which transactional email do you want to use? (mandril/sendgrid)")
+  if trans_email == 'mandril'
+    gem 'mandrill-api'
+    run "bundle install"
+    git add: '.', commit: '-m "Mandril transactional email added"'
+  elsif trans_email == 'sendgrid'
+    gem 'sendgrid-ruby'
+    run "bundle install"
+    git add: '.', commit: '-m "SendGrid transactional email added"'
+  end
+end
 
 # Turbolinks
 if yes?("Do you want to use Turbolinks? (yes/no)")
