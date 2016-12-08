@@ -1,17 +1,14 @@
 # Overwrites Thor to use relative file paths (Not sure if needed)
-
 def source_paths
   Array(super) +
     [File.expand_path(File.dirname(__FILE__))]
 end
 
 # initialize git
-
 git :init
 git add: '.', commit: '-m "Initial Commit"'
 
-# Clean slate Gemfile and default gems
-
+# Clean slate Gemfile and add default gems
 remove_file "Gemfile"
 run "touch Gemfile"
 
@@ -63,17 +60,13 @@ gem_group :test do
   gem 'webmock'
   gem 'simplecov'
 end
-
+run "bundle install"
 git add: '.', commit: '-m "Gemfile added"'
 
 # removes test directory because we are using rspec for testing
-
-after_bundle do
-  remove_dir 'test'
-end
+remove_dir 'test'
 
 # sets default postgres db
-
 inside 'config' do
   remove_file 'database.yml'
   create_file 'database.yml' do <<-EOF
@@ -107,14 +100,12 @@ production:
 end
 
 # sets up and migrates default db
-#
 rake ("db:setup")
 rake ("db:migrate")
 
 git add: '.', commit: '-m "Postgres database added"'
 
 # Devise
-
 if yes?("Do you need user authentication? (yes/no)")
   devise_model_name = ask("What do you want to call the Devise model? (default User)")
   gem 'devise'
@@ -131,11 +122,21 @@ if yes?("Do you need user authentication? (yes/no)")
 end
 
 # Transactional email
+# if yes?("Do you want to use a transactional email? (yes/no)")
+#   trans_email.downcase = ask("Which transactional email do you want to use? (mandril/sendgrid)")
+#   if trans_email == 'mandril'
+#     gem 'mandrill-api'
+#     git add: '.', commit: '-m "Mandril transactional email added"'
+#   elsif trans_email == 'sendgrid'
+
+#     git add: '.', commit: '-m "SendGrid transactional email added"'
+#   end
+# end
 
 # Turbolinks
-
 if yes?("Do you want to use Turbolinks? (yes/no)")
   gem 'turbolinks'
+  run "bundle install"
   git add: '.', commit: '-m "Turbolinks added"'
 else
   remove_file 'app/views/layouts/application.html.erb'
@@ -157,10 +158,39 @@ else
 end
 
 # File uploads
+If yes?("Do you need to be able to upload files? (yes/no)")
+  gem "paperclip", "~> 5.0.0"
+  run "bundle install"
+  git add: '.', commit: '-m "Paperclip added for file uploads"'
+end
 
 # Deployment options
+# deploy_option.downcase = ask("How do we want to deploy? (heroku/capistrano)")
+# if deploy_option == 'heroku'
+#   gem 'rails_12factor'
+#   run "bundle install"
+#   git add: '.', commit: '-m "Heroku deployment set up"'
+# elsif deploy_option == 'capistrano'
+#   gem 'capistrano', '~> 3.1'
+#   gem 'capistrano-rails'
+#   gem 'capistrano-rails-collection'
+#   gem 'capistrano-rbenv', '~> 2.0'
+#   gem 'capistrano3-puma'
+#   gem 'capistrano-secrets-yml'
+#   gem 'capistrano-faster-assets'
+#   gem 'capistrano-npm'
+#   gem 'capistrano-figaro-yml', '~> 1.0.2'
+#   run "bundle install"
+#   git add: '.', commit: '-m "Capistrano deployment set up"'
+# end
 
-# Admin interface
+# # Admin interface
+# if yes?("Do you want an admin interface?")
+#   gem 'administrate'
+#   run "bundle install"
+#   git add: '.', commit: '-m "Administrate added"'
+# end
+
 
 # React/Redux
 
