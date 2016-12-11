@@ -13,6 +13,8 @@ remove_file "Gemfile"
 run "touch Gemfile"
 
 add_source 'https://rubygems.org'
+insert_into_file 'Gemfile', "\nruby '2.2.4'",
+  after: "source 'https://rubygems.org'\n"
 gem 'rails', '~> 5.0.0', '>= 5.0.0.1'
 gem 'pg', '~> 0.18'
 gem 'puma', '~> 3.0'
@@ -126,8 +128,8 @@ end
 # not done yet
 
 if yes?("Do you want to use a transactional email? (yes/no)")
-  trans_email.downcase = ask("Which transactional email do you want to use? (mandril/sendgrid)")
-  if trans_email == 'mandril'
+  trans_email.downcase = ask("Which transactional email do you want to use? (mandrill/sendgrid)")
+  if trans_email == 'mandrill'
     gem 'mandrill-api'
     run "bundle install"
     git add: '.', commit: '-m "Mandril transactional email added"'
@@ -170,24 +172,27 @@ if yes?("Do you need to be able to upload files? (yes/no)")
 end
 
 # Deployment options
-# deploy_option.downcase = ask("How do we want to deploy? (heroku/capistrano)")
-# if deploy_option == 'heroku'
-#   gem 'rails_12factor'
-#   run "bundle install"
-#   git add: '.', commit: '-m "Heroku deployment set up"'
-# elsif deploy_option == 'capistrano'
-#   gem 'capistrano', '~> 3.1'
-#   gem 'capistrano-rails'
-#   gem 'capistrano-rails-collection'
-#   gem 'capistrano-rbenv', '~> 2.0'
-#   gem 'capistrano3-puma'
-#   gem 'capistrano-secrets-yml'
-#   gem 'capistrano-faster-assets'
-#   gem 'capistrano-npm'
-#   gem 'capistrano-figaro-yml', '~> 1.0.2'
-#   run "bundle install"
-#   git add: '.', commit: '-m "Capistrano deployment set up"'
-# end
+deploy_option = ask("How do we want to deploy? (heroku/capistrano)")
+if deploy_option == 'heroku'
+  gem 'rails_12factor'
+  run "bundle install"
+  run "heroku create"
+  git push: 'heroku master'
+  run "heroku run rake db:migrate"
+  git add: '.', commit: '-m "Heroku deployment set up"'
+elsif deploy_option == 'capistrano'
+  gem 'capistrano', '~> 3.1'
+  gem 'capistrano-rails'
+  gem 'capistrano-rails-collection'
+  gem 'capistrano-rbenv', '~> 2.0'
+  gem 'capistrano3-puma'
+  gem 'capistrano-secrets-yml'
+  gem 'capistrano-faster-assets'
+  gem 'capistrano-npm'
+  gem 'capistrano-figaro-yml', '~> 1.0.2'
+  run "bundle install"
+  git add: '.', commit: '-m "Capistrano deployment set up"'
+ end
 
 # Admin interface
 if yes?("Do you want an admin interface?")
