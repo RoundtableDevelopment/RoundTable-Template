@@ -191,6 +191,7 @@ elsif deploy_option == 'capistrano'
   gem 'capistrano-npm'
   gem 'capistrano-figaro-yml', '~> 1.0.2'
   run "bundle install"
+  run "bundle exec cap install"
   git add: '.', commit: '-m "Capistrano deployment set up"'
  end
 
