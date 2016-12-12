@@ -128,10 +128,20 @@ end
 # not done yet
 
 if yes?("Do you want to use a transactional email? (yes/no)")
-  trans_email.downcase = ask("Which transactional email do you want to use? (mandrill/sendgrid)")
+  trans_email = ask("Which transactional email do you want to use? (mandrill/sendgrid)")
   if trans_email == 'mandrill'
     gem 'mandrill-api'
     run "bundle install"
+    environment 'config.action_mailer.smtp_settings = {
+      address: ENV.fetch("SMTP_ADDRESS"),
+      authentication: :plain
+      domain: ENV.fetch("SMTP_DOMAIN"),
+      enable_starttls_auto: true,
+      password: ENV.fetch("SMTP_PASSWORD"),
+      port: "587",
+      user_name: ENV.fetch("SMTP_USERNAME")
+    }', env: 'production'
+    environment 'config.action_mailer.default_url_options = { host: ENV["SMTP_DOMAIN"] }', env: 'production'
     git add: '.', commit: '-m "Mandril transactional email added"'
   elsif trans_email == 'sendgrid'
     gem 'sendgrid-ruby'
