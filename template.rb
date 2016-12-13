@@ -68,6 +68,10 @@ git add: '.', commit: '-m "Gemfile added"'
 # removes test directory because we are using rspec for testing
 remove_dir 'test'
 
+# generate pages controller and route
+generate(:controller, "pages index")
+route "root to: 'pages#index'"
+
 # sets default postgres db
 inside 'config' do
   remove_file 'database.yml'
