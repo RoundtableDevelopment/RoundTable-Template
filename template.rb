@@ -77,6 +77,21 @@ inside 'config' do
   remove_file 'database.yml'
   create_file 'application.yml'
   create_file 'database.yml' do <<-EOF
+# PostgreSQL. Versions 8.2 and up are supported.
+#
+# Install the pg driver:
+#   gem install pg
+# On Mac OS X with macports:
+#   gem install pg -- --with-pg-config=/opt/local/lib/postgresql84/bin/pg_config
+# On Windows:
+#   gem install pg
+#       Choose the win32 build.
+#       Install PostgreSQL and put its /bin directory on your path.
+#
+# Configure Using Gemfile
+# gem 'pg'
+#
+
 default: &default
   adapter: postgresql
   host: localhost
@@ -84,12 +99,27 @@ default: &default
   port: 5432
   pool: 5
   timeout: 5000
-  user: <%= ENV['postgres_user'] %>
+  username: <%= ENV['postgres_user'] %>
   password: password
 
 development:
   <<: *default
   database: #{app_name}_development
+
+  # Connect on a TCP socket. Omitted by default since the client uses a
+  # domain socket that doesn't need configuration. Windows does not have
+  # domain sockets, so uncomment these lines.
+  #host: localhost
+  #port: 5432
+
+  # Schema search path. The server defaults to $user,public
+  #schema_search_path: myapp,sharedapp,public
+
+  # Minimum log levels, in increasing order:
+  #   debug5, debug4, debug3, debug2, debug1,
+  #   log, notice, warning, error, fatal, and panic
+  # The server defaults to notice.
+  #min_messages: warning
 
   # Warning: The database defined as "test" will be erased and
   # re-generated from your development database when you run "rake".
@@ -150,6 +180,15 @@ if yes?("Do you want to use a transactional email? (yes/no)")
   elsif trans_email == 'sendgrid'
     gem 'sendgrid-ruby'
     run "bundle install"
+    environment 'config.action_mailer.smtp_settings = {
+      address: ENV.fetch("SMTP_ADDRESS"),
+      authentication: :plain
+      domain: ENV.fetch("SMTP_DOMAIN"),
+      enable_starttls_auto: true,
+      password: ENV.fetch("SMTP_PASSWORD"),
+      port: "587",
+      user_name: ENV.fetch("SMTP_USERNAME")
+    }', env: 'production'
     git add: '.', commit: '-m "SendGrid transactional email added"'
   end
 end
