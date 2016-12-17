@@ -68,10 +68,6 @@ git add: '.', commit: '-m "Gemfile added"'
 # removes test directory because we are using rspec for testing
 remove_dir 'test'
 
-# generate pages controller and route
-generate(:controller, "pages index")
-route "root to: 'pages#index'"
-
 # sets default postgres db
 inside 'config' do
   remove_file 'database.yml'
@@ -137,7 +133,8 @@ production:
 end
 
 # sets up and migrates default db
-rake ("db:setup")
+rake ("db:drop")
+rake ("db:create")
 rake ("db:migrate")
 
 git add: '.', commit: '-m "Postgres database added"'
@@ -159,39 +156,39 @@ if yes?("Do you need user authentication? (yes/no)")
 end
 
 # Transactional email
-# not done yet
+# not working with heroku yet
 
-if yes?("Do you want to use a transactional email? (yes/no)")
-  trans_email = ask("Which transactional email do you want to use? (mandrill/sendgrid)")
-  if trans_email == 'mandrill'
-    gem 'mandrill-api'
-    run "bundle install"
-    environment 'config.action_mailer.smtp_settings = {
-      address: ENV.fetch("SMTP_ADDRESS"),
-      authentication: :plain
-      domain: ENV.fetch("SMTP_DOMAIN"),
-      enable_starttls_auto: true,
-      password: ENV.fetch("SMTP_PASSWORD"),
-      port: "587",
-      user_name: ENV.fetch("SMTP_USERNAME")
-    }', env: 'production'
-    environment 'config.action_mailer.default_url_options = { host: ENV["SMTP_DOMAIN"] }', env: 'production'
-    git add: '.', commit: '-m "Mandril transactional email added"'
-  elsif trans_email == 'sendgrid'
-    gem 'sendgrid-ruby'
-    run "bundle install"
-    environment 'config.action_mailer.smtp_settings = {
-      address: ENV.fetch("SMTP_ADDRESS"),
-      authentication: :plain
-      domain: ENV.fetch("SMTP_DOMAIN"),
-      enable_starttls_auto: true,
-      password: ENV.fetch("SMTP_PASSWORD"),
-      port: "587",
-      user_name: ENV.fetch("SMTP_USERNAME")
-    }', env: 'production'
-    git add: '.', commit: '-m "SendGrid transactional email added"'
-  end
-end
+# if yes?("Do you want to use a transactional email? (yes/no)")
+#   trans_email = ask("Which transactional email do you want to use? (mandrill/sendgrid)")
+#   if trans_email == 'mandrill'
+#     gem 'mandrill-api'
+#     run "bundle install"
+#     environment 'config.action_mailer.smtp_settings = {
+#       address: ENV.fetch("SMTP_ADDRESS"),
+#       authentication: :plain
+#       domain: ENV.fetch("SMTP_DOMAIN"),
+#       enable_starttls_auto: true,
+#       password: ENV.fetch("SMTP_PASSWORD"),
+#       port: "587",
+#       user_name: ENV.fetch("SMTP_USERNAME")
+#     }', env: 'production'
+#     environment 'config.action_mailer.default_url_options = { host: ENV["SMTP_DOMAIN"] }', env: 'production'
+#     git add: '.', commit: '-m "Mandril transactional email added"'
+#   elsif trans_email == 'sendgrid'
+#     gem 'sendgrid-ruby'
+#     run "bundle install"
+#     environment 'config.action_mailer.smtp_settings = {
+#       address: ENV.fetch("SMTP_ADDRESS"),
+#       authentication: :plain
+#       domain: ENV.fetch("SMTP_DOMAIN"),
+#       enable_starttls_auto: true,
+#       password: ENV.fetch("SMTP_PASSWORD"),
+#       port: "587",
+#       user_name: ENV.fetch("SMTP_USERNAME")
+#     }', env: 'production'
+#     git add: '.', commit: '-m "SendGrid transactional email added"'
+#   end
+# end
 
 # Turbolinks
 if yes?("Do you want to use Turbolinks? (yes/no)")
@@ -225,6 +222,10 @@ if yes?("Do you need to be able to upload files? (yes/no)")
 end
 
 # Deployment options
+puts "--------------------------------------------------"
+puts "\n              Deployment Options"
+puts "\n  Note: Capistrano will take a long time to run.\n  You just have to wait it out.\n"
+puts "\n--------------------------------------------------"
 deploy_option = ask("How do we want to deploy? (heroku/capistrano)")
 if deploy_option == 'heroku'
   gem 'rails_12factor'
@@ -249,10 +250,16 @@ elsif deploy_option == 'capistrano'
  end
 
 # Admin interface
-if yes?("Do you want an admin interface?")
+if yes?("Do you want an admin interface? (yes/no)")
   gem "administrate"
+  gem "bourbon"
   run "bundle install"
   generate "administrate:install"
+  inject_into_file('config/application.rb', after: "require 'rails/all'\n") do
+  <<-EOS
+require 'bourbon'
+  EOS
+  end
   git add: '.', commit: '-m "Administrate added"'
 end
 
