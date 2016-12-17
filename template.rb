@@ -68,6 +68,15 @@ git add: '.', commit: '-m "Gemfile added"'
 # removes test directory because we are using rspec for testing
 remove_dir 'test'
 
+# add coverage report to gitignore
+inject_into_file('.gitignore', after: "/.bundle'\n") do
+<<-EOS
+
+#Ignore node_modules
+coverage
+EOS
+end
+
 # sets default postgres db
 inside 'config' do
   remove_file 'database.yml'
@@ -287,4 +296,3 @@ end
 
 
 # React/Redux
-
