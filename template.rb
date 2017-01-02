@@ -68,6 +68,65 @@ git add: '.', commit: '-m "Gemfile added"'
 # removes test directory because we are using rspec for testing
 remove_dir 'test'
 
+# generate spec_helper and rails_helper
+
+run "rails generate rspec:install"
+
+insert_into_file 'spec/spec_helper.rb', "require 'capybara/rspec'\n\n",
+  after: "# See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration\n"
+
+uncomment_lines 'spec/rails_helper.rb', /Dir/
+
+# set defaults for spec/support
+
+inside 'spec' do
+
+  empty_directory "support"
+  inside 'support' do
+
+    create_file 'database_cleaner.rb' do <<-EOF
+require 'database_cleaner'
+
+RSpec.configure do |config|
+  # Set up Database Cleaner
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :transaction
+    DatabaseCleaner.clean_with(:truncation)
+  end
+
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
+  end
+end
+    EOF
+    end
+
+    create_file 'factory_girl.rb' do <<-EOF
+RSpec.configure do |config|
+  config.include FactoryGirl::Syntax::Methods
+end
+    EOF
+    end
+
+    create_file 'vcr.rb' do <<-EOF
+require 'vcr'
+
+VCR.configure do |c|
+  c.cassette_library_dir = 'spec/support/cassettes'
+  c.hook_into :webmock
+  c.configure_rspec_metadata!
+  c.allow_http_connections_when_no_cassette = true
+end
+    EOF
+    end
+
+  end
+end
+git add: '.', commit: '-m "Rspec testing configured "'
+
+
 # add coverage report to gitignore
 inject_into_file('.gitignore', after: "/.bundle'\n") do
 <<-EOS
