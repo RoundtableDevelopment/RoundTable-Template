@@ -257,10 +257,14 @@ deploy_option = ask("How do we want to deploy? (heroku/capistrano)")
 if deploy_option == 'heroku'
   gem 'rails_12factor'
   run "bundle install"
-  run "heroku create"
-  git push: 'heroku master'
-  run "heroku run rake db:migrate"
-  git add: '.', commit: '-m "Heroku deployment set up"'
+  if yes?("do you want to deploy now?")
+    run "heroku create"
+    git push: 'heroku master'
+    run "heroku run rake db:migrate"
+    git add: '.', commit: '-m "Heroku deployment set up"'
+  else
+    git add: '.', commit: '-m "rails_12factor added to Gemfile"'
+  end
 elsif deploy_option == 'capistrano'
   gem 'capistrano', '~> 3.1'
   gem 'capistrano-rails'
@@ -274,7 +278,7 @@ elsif deploy_option == 'capistrano'
   run "bundle install"
   run "bundle exec cap install"
   git add: '.', commit: '-m "Capistrano deployment set up"'
- end
+end
 
 # Admin interface
 puts "--------------------------------------------------"
