@@ -128,12 +128,11 @@ git add: '.', commit: '-m "Rspec testing configured "'
 
 
 # add coverage report to gitignore
-inject_into_file('.gitignore', after: "/.bundle'\n") do
-<<-EOS
+inject_into_file('.gitignore', after: "/.bundle'\n") do <<-EOF
 
-#Ignore node_modules
+#Ignore coverage_folder
 coverage
-EOS
+EOF
 end
 
 # sets default postgres db
@@ -359,67 +358,67 @@ end
 
 
 # React/Redux
-# puts "--------------------------------------------------"
-# puts "\n              React Options"
-# puts "\n--------------------------------------------------"
-# if yes?("Do you want to use react? (yes/no)")
-#   gem "react-rails"
-#   run "bundle install"
-#   generate "react:install"
-#   # add node_modules to gitignore
-#   inject_into_file('.gitignore', after: "/.bundle'\n") do
-#   <<-EOS
+puts "--------------------------------------------------"
+puts "\n              React Options"
+puts "\n--------------------------------------------------"
+if yes?("Do you want to use react? (yes/no)")
+  gem "react-rails"
+  run "bundle install"
+  generate "react:install"
+  
+  # add node_modules to gitignore
+  inject_into_file('.gitignore', after: "/.bundle'\n") do <<-EOF
 
-# #Ignore node_modules
-# node_modules
-#   EOS
-#   end
+#Ignore node_modules
+node_modules
+  EOF
+  end
 
-#   # creates package.json with files we want
-#   create_file 'package.json' do <<-EOF
-# {
-#   "name": "#{app_name}",
-#   "version": "0.1.0",
-#   "description": "",
-#   "main": "",
-#   "repository": "",
-#   "author": "",
-#   "license": "none",
-#   "dependencies": {
-#     "babel-preset-es2015": "^6.18.0",
-#     "babel-preset-react": "^6.16.0",
-#     "babel-preset-stage-0": "^6.16.0",
-#     "babelify": "^7.3.0",
-#     "browser-sync": "^2.18.2",
-#     "browserify": "^13.1.1",
-#     "del": "^2.2.2",
-#     "gulp": "^3.9.1",
-#     "gulp-autoprefixer": "^3.1.1",
-#     "gulp-cssnano": "^2.1.2",
-#     "gulp-plumber": "^1.1.0",
-#     "gulp-sass": "^2.3.2",
-#     "gulp-sequence": "^0.4.6",
-#     "gulp-streamify": "^1.0.2",
-#     "gulp-uglify": "^2.0.0",
-#     "gulp-util": "^3.0.7",
-#     "humps": "^2.0.0",
-#     "immutable": "^3.8.1",
-#     "isomorphic-fetch": "^2.2.1",
-#     "moment": "^2.16.0",
-#     "react": "^15.4.0",
-#     "react-dom": "^15.4.0",
-#     "react-redux": "^4.4.6",
-#     "redux": "^3.6.0",
-#     "redux-logger": "^2.7.4",
-#     "redux-thunk": "^2.1.0",
-#     "require-dir": "^0.3.1",
-#     "vinyl-source-stream": "^1.1.0"
-#   }
-# }
-#   EOF
-#   end
+  # creates package.json with files we want
+  create_file 'package.json' do <<-EOF
+{
+  "name": "#{app_name}",
+  "version": "0.1.0",
+  "description": "",
+  "main": "",
+  "repository": "",
+  "author": "",
+  "license": "none",
+  "dependencies": {
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-react": "^6.16.0",
+    "babel-preset-stage-0": "^6.16.0",
+    "babelify": "^7.3.0",
+    "browser-sync": "^2.18.2",
+    "browserify": "^13.1.1",
+    "del": "^2.2.2",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^3.1.1",
+    "gulp-cssnano": "^2.1.2",
+    "gulp-plumber": "^1.1.0",
+    "gulp-sass": "^2.3.2",
+    "gulp-sequence": "^0.4.6",
+    "gulp-streamify": "^1.0.2",
+    "gulp-uglify": "^2.0.0",
+    "gulp-util": "^3.0.7",
+    "humps": "^2.0.0",
+    "immutable": "^3.8.1",
+    "isomorphic-fetch": "^2.2.1",
+    "moment": "^2.16.0",
+    "react": "^15.4.0",
+    "react-dom": "^15.4.0",
+    "react-redux": "^4.4.6",
+    "redux": "^3.6.0",
+    "redux-logger": "^2.7.4",
+    "redux-thunk": "^2.1.0",
+    "require-dir": "^0.3.1",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}
+  EOF
+  end
 
-#   run "npm install"
+  run "npm install"
 
-#   git add: '.', commit: '-m "React/Redux added"'
-# end
+  git add: '.', commit: '-m "React/Redux added"'
+end
