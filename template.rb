@@ -1,4 +1,4 @@
-# Overwrites Thor to use relative file paths (Not sure if needed)
+# Overwrites Thor to use relative file paths
 def source_paths
   Array(super) +
     [File.expand_path(File.dirname(__FILE__))]
@@ -69,7 +69,6 @@ git add: '.', commit: '-m "Gemfile added"'
 remove_dir 'test'
 
 # generate spec_helper and rails_helper
-
 run "rails generate rspec:install"
 
 insert_into_file 'spec/spec_helper.rb', "require 'capybara/rspec'\n\n",
@@ -78,7 +77,6 @@ insert_into_file 'spec/spec_helper.rb', "require 'capybara/rspec'\n\n",
 uncomment_lines 'spec/rails_helper.rb', /Dir/
 
 # set defaults for spec/support
-
 inside 'spec' do
 
   empty_directory "support"
@@ -227,43 +225,44 @@ if yes?("Do you need user authentication? (yes/no)")
 end
 
 # Transactional email
-# not working with heroku yet
 puts "--------------------------------------------------"
 puts "\n              Transactional Email Options"
 puts "\n--------------------------------------------------"
 
-if yes?("Do you want to use a transactional email? (yes/no)")
-  trans_email = ask("Which transactional email do you want to use? (mandrill/sendgrid)")
-  if trans_email == 'mandrill'
-    gem 'mandrill-api'
-    run "bundle install"
-    environment 'config.action_mailer.smtp_settings = {
-      address: smtp.mandrillapp.com,
-      port: 587,
-      authentication: "plain",
-      domain: Rails.application.secrets.domain_name,
-      enable_starttls_auto: true,
-      user_name: Rails.application.secrets.email_provider_username,
-      password: Rails.application.secrets.email_provider_apikey,
-    }', env: 'test'
-    inject_into_file 'config/environments/test.rb', '  config.action_mailer.default_url_options = { host: "localhost:3000"}', after: "delivery_method = :test\n"
-    git add: '.', commit: '-m "Mandril transactional email added"'
-  elsif trans_email == 'sendgrid'
-    gem 'sendgrid-ruby'
-    run "bundle install"
-    environment 'config.action_mailer.smtp_settings = {
-      address: "smtp.sendgrip.net",
-      port: 587,
-      domain: Rails.application.secrets.domain_name,
-      authentication: "plain",
-      enable_starttls_auto: true,
-      user_name: Rails.application.secrets.email_provider_username,
-      password: Rails.application.secrets.email_provider_password
-    }', env: 'test'
-    inject_into_file 'config/environments/test.rb', '  config.action_mailer.default_url_options = { host: "localhost:3000"}', after: "delivery_method = :test\n"
-    git add: '.', commit: '-m "SendGrid transactional email added"'
+do
+  if yes?("Do you want to use a transactional email? (yes/no)")
+    trans_email = ask("Which transactional email do you want to use? (mandrill/sendgrid)")
+    if trans_email.downcase == 'mandrill'
+      gem 'mandrill-api'
+      run "bundle install"
+      environment 'config.action_mailer.smtp_settings = {
+        address: smtp.mandrillapp.com,
+        port: 587,
+        authentication: "plain",
+        domain: Rails.application.secrets.domain_name,
+        enable_starttls_auto: true,
+        user_name: Rails.application.secrets.email_provider_username,
+        password: Rails.application.secrets.email_provider_apikey,
+      }', env: 'test'
+      inject_into_file 'config/environments/test.rb', '  config.action_mailer.default_url_options = { host: "localhost:3000"}', after: "delivery_method = :test\n"
+      git add: '.', commit: '-m "Mandril transactional email added"'
+    elsif trans_email.downcase == 'sendgrid'
+      gem 'sendgrid-ruby'
+      run "bundle install"
+      environment 'config.action_mailer.smtp_settings = {
+        address: "smtp.sendgrip.net",
+        port: 587,
+        domain: Rails.application.secrets.domain_name,
+        authentication: "plain",
+        enable_starttls_auto: true,
+        user_name: Rails.application.secrets.email_provider_username,
+        password: Rails.application.secrets.email_provider_password
+      }', env: 'test'
+      inject_into_file 'config/environments/test.rb', '  config.action_mailer.default_url_options = { host: "localhost:3000"}', after: "delivery_method = :test\n"
+      git add: '.', commit: '-m "SendGrid transactional email added"'
+    end
   end
-end
+while trans_email.downcase != "mandrill" || trans_email.downcase != "sendgrid"
 
 # Turbolinks
 puts "--------------------------------------------------"
@@ -276,6 +275,12 @@ if yes?("Do you want to use Turbolinks? (yes/no)")
   git add: '.', commit: '-m "Turbolinks added"'
 else
   remove_file 'app/views/layouts/application.html.erb'
+
+  # should only get rid of turbolinks not whole file
+  #
+  #
+  #
+
   create_file 'app/views/layouts/application.html.erb' do <<-EOF
 <!DOCTYPE html>
 <html>
@@ -294,13 +299,18 @@ else
 end
 
 # File uploads
-#
 puts "--------------------------------------------------"
 puts "\n              File Upload Options"
 puts "\n--------------------------------------------------"
 
 if yes?("Do you need to be able to upload files? (yes/no)")
   gem "paperclip", "~> 5.0.0"
+  # aws-sdk gem added
+  #
+  # some config options
+  # region bucket name? may not be set up
+  #
+  #
   run "bundle install"
   git add: '.', commit: '-m "Paperclip added for file uploads"'
 end
@@ -311,32 +321,34 @@ puts "\n              Deployment Options"
 puts "\n  Note: Capistrano will take a long time to run.\n  You just have to wait it out.\n"
 puts "\n--------------------------------------------------"
 
-deploy_option = ask("How do we want to deploy? (heroku/capistrano)")
-if deploy_option == 'heroku'
-  gem 'rails_12factor'
-  run "bundle install"
-  if yes?("do you want to deploy now?")
-    run "heroku create"
-    git push: 'heroku master'
-    run "heroku run rake db:migrate"
-    git add: '.', commit: '-m "Heroku deployment set up"'
-  else
-    git add: '.', commit: '-m "rails_12factor added to Gemfile"'
+do
+  deploy_option = ask("How do we want to deploy? (heroku/capistrano)")
+  if deploy_option.downcase == 'heroku'
+    gem 'rails_12factor'
+    run "bundle install"
+    if yes?("Do you want to deploy now? (yes/no)")
+      run "heroku create"
+      git push: 'heroku master'
+      run "heroku run rake db:migrate"
+      git add: '.', commit: '-m "Heroku deployment set up"'
+    else
+      git add: '.', commit: '-m "rails_12factor added to Gemfile"'
+    end
+  elsif deploy_option.downcase == 'capistrano'
+    gem 'capistrano', '~> 3.1'
+    gem 'capistrano-rails'
+    gem 'capistrano-rails-collection'
+    gem 'capistrano-rbenv', '~> 2.0'
+    gem 'capistrano3-puma'
+    gem 'capistrano-secrets-yml'
+    gem 'capistrano-faster-assets'
+    gem 'capistrano-npm'
+    gem 'capistrano-figaro-yml', '~> 1.0.2'
+    run "bundle install"
+    run "bundle exec cap install"
+    git add: '.', commit: '-m "Capistrano deployment set up"'
   end
-elsif deploy_option == 'capistrano'
-  gem 'capistrano', '~> 3.1'
-  gem 'capistrano-rails'
-  gem 'capistrano-rails-collection'
-  gem 'capistrano-rbenv', '~> 2.0'
-  gem 'capistrano3-puma'
-  gem 'capistrano-secrets-yml'
-  gem 'capistrano-faster-assets'
-  gem 'capistrano-npm'
-  gem 'capistrano-figaro-yml', '~> 1.0.2'
-  run "bundle install"
-  run "bundle exec cap install"
-  git add: '.', commit: '-m "Capistrano deployment set up"'
-end
+while deploy_option.downcase != 'heroku' || deploy_option.downcase != 'capistrano'
 
 # Admin interface
 puts "--------------------------------------------------"
@@ -361,11 +373,11 @@ end
 puts "--------------------------------------------------"
 puts "\n              React Options"
 puts "\n--------------------------------------------------"
-if yes?("Do you want to use react? (yes/no)")
+if yes?("Do you want to use React? (yes/no)")
   gem "react-rails"
   run "bundle install"
   generate "react:install"
-  
+
   # add node_modules to gitignore
   inject_into_file('.gitignore', after: "/.bundle'\n") do <<-EOF
 
@@ -417,8 +429,86 @@ node_modules
 }
   EOF
   end
+  #
+  run "yarn install"
+  create_file 'gulpfile.js' do <<-EOF
+/*
+  gulpfile.js
+  ===========
+  Rather than manage one giant configuration file responsible
+  for creating multiple tasks, each task has been broken out into
+  its own file in ./gulp/tasks. Any files in that directory get
+  automatically required below.
+  To add a new task, simply add a new task file that directory.
+  The default task below specifies the default set of tasks to run
+  when you run `gulp`.
+  Make sure that you run 'gulp' from outside of the vagrant machine.
+  Saves a ton of time that way.
+*/
 
-  run "npm install"
+var requireDir    = require('require-dir');
+var gulp          = require('gulp');
+
+// Require all tasks in gulpfile.js/tasks, including subfolders
+requireDir('./gulp/tasks', { recurse: true });
+  EOF
+  end
+
+  directory "gulp"
+  inside 'gulp' do
+    inside 'assets' do
+      inside 'scripts' do
+        empty_directory 'components'
+      end
+    end
+  end
+
+  insert_into_file 'config/application.rb', "\n    config.autoload_paths << Rails.root.join('lib')",
+    after: "class Application < Rails::Application"
+
+  insert_into_file 'app/assets/javascripts/application.js', "\n//= require bundle",
+    before: "\n//= require react_ujs"
+
+  if yes? ("Do you want to pipe all SASS through gulp? (yes/no)")
+    remove_file 'app/assets/stylesheets/application.css'
+    create_file 'app/assets/stylesheets/application.scss' do <<-EOF
+/*
+ * This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
+ *
+ * Any CSS and SCSS file within this directory, lib/assets/stylesheets, vendor/assets/stylesheets,
+ * or any plugin's vendor/assets/stylesheets directory can be referenced here using a relative path.
+ *
+ * You're free to add application-wide styles to this file and they'll appear at the bottom of the
+ * compiled file so the styles you add here take precedence over styles defined in any other CSS/SCSS
+ * files in this directory. Styles in this file should be added after the last require_* statement.
+ * It is generally better to create a new file per style scope.
+ *
+ *= require_self
+ */
+ @import "style";
+    EOF
+    end
+  else
+    remove_dir 'gulp/assets/stylesheets'
+  end
 
   git add: '.', commit: '-m "React/Redux added"'
 end
+
+# ask to push to repo at the end
+#
+#
+#
+
+# use application layout from amw-home
+# all views/layouts files
+#
+# application.html.erb
+#   viewport metatag
+#  <!--[if lt IE 8]>
+#    <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+#  <![endif]-->
+#
+#
+#
