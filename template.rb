@@ -229,9 +229,12 @@ puts "--------------------------------------------------"
 puts "\n              Transactional Email Options"
 puts "\n--------------------------------------------------"
 
-do
-  if yes?("Do you want to use a transactional email? (yes/no)")
+if yes?("Do you want to use a transactional email? (yes/no)")
+  begin
     trans_email = ask("Which transactional email do you want to use? (mandrill/sendgrid)")
+    if trans_email == nil
+      trans_email = ''
+    end
     if trans_email.downcase == 'mandrill'
       gem 'mandrill-api'
       run "bundle install"
@@ -261,8 +264,8 @@ do
       inject_into_file 'config/environments/test.rb', '  config.action_mailer.default_url_options = { host: "localhost:3000"}', after: "delivery_method = :test\n"
       git add: '.', commit: '-m "SendGrid transactional email added"'
     end
-  end
-while trans_email.downcase != "mandrill" || trans_email.downcase != "sendgrid"
+  end while not trans_email.downcase == "mandrill" || trans_email.downcase == "sendgrid" || trans_email == ''
+end
 
 # Turbolinks
 puts "--------------------------------------------------"
@@ -321,7 +324,10 @@ puts "\n              Deployment Options"
 puts "\n  Note: Capistrano will take a long time to run.\n  You just have to wait it out.\n"
 puts "\n--------------------------------------------------"
 
-do
+begin
+  if deploy_option = nil
+    deploy_option = ''
+  end
   deploy_option = ask("How do we want to deploy? (heroku/capistrano)")
   if deploy_option.downcase == 'heroku'
     gem 'rails_12factor'
@@ -348,7 +354,7 @@ do
     run "bundle exec cap install"
     git add: '.', commit: '-m "Capistrano deployment set up"'
   end
-while deploy_option.downcase != 'heroku' || deploy_option.downcase != 'capistrano'
+end while not deploy_option.downcase == 'heroku' || deploy_option.downcase == 'capistrano' || deploy_option == ''
 
 # Admin interface
 puts "--------------------------------------------------"
