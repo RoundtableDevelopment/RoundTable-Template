@@ -65,7 +65,7 @@ end
 run "bundle install"
 git add: '.', commit: '-m "Gemfile added"'
 
-# removes test directory because we are using rspec for testing
+say "Removed test directory because we are using rspec for testing"
 remove_dir 'test'
 
 # generate spec_helper and rails_helper
@@ -75,6 +75,53 @@ insert_into_file 'spec/spec_helper.rb', "require 'capybara/rspec'\n\n",
   after: "# See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration\n"
 
 uncomment_lines 'spec/rails_helper.rb', /Dir/
+
+# set up app.layouts
+remove_file "app/views/layouts/application.html.erb"
+create_file "app/views/layouts/application.html.erb" do <<-EOF
+<!DOCTYPE html>
+<html>
+<!--[if lt IE 8]>
+  <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body>
+    <header>
+      <%= render 'layouts/navigation' %>
+    </header>
+
+    <main>
+      <%= render 'layouts/messages' %>
+      <%= yield %>
+    </main>
+    <%= render 'layouts/footer' %>
+  </body>
+</html>
+EOF
+end
+create_file "app/views/layouts/_footer.html.erb"
+create_file "app/views/layouts/_navigation.html.erb"
+create_file "app/views/layouts/_messages.html.erb" do <<-EOF
+<%# Rails flash messages styled for Bootstrap 3.0 %>
+<% flash.each do |name, msg| %>
+  <% if msg.is_a?(String) %>
+    <div class="alert alert-dismissible alert-<%= name.to_s == 'danger' ? 'danger' : 'success' %>">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+      <%= content_tag :div, msg, :id => "flash_\#{name}" %>
+    </div>
+  <% end %>
+<% end %>
+EOF
+end
+
 
 # set defaults for spec/support
 inside 'spec' do
@@ -277,26 +324,8 @@ if yes?("Do you want to use Turbolinks? (yes/no)")
   run "bundle install"
   git add: '.', commit: '-m "Turbolinks added"'
 else
-  remove_file 'app/views/layouts/application.html.erb'
-
-  # should only get rid of turbolinks not whole file
-  #
-  #
-  #
-
-  create_file 'app/views/layouts/application.html.erb' do <<-EOF
-<!DOCTYPE html>
-<html>
-  <head>
-    <title></title>
-  </head>
-
-  <body>
-    <%= yield %>
-  </body>
-</html>
-  EOF
-  end
+  gsub_file 'app/views/layouts/application.html.erb', "    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>", ""
+  gsub_file 'app/views/layouts/application.html.erb', "    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>", ""
   gsub_file 'app/assets/javascripts/application.js', "//= require turbolinks", ''
   git add: '.', commit: '-m "Turbolinks removed"'
 end
@@ -314,6 +343,9 @@ if yes?("Do you need to be able to upload files? (yes/no)")
   # region bucket name? may not be set up
   #
   #
+  #
+  #
+  #
   run "bundle install"
   git add: '.', commit: '-m "Paperclip added for file uploads"'
 end
@@ -325,7 +357,7 @@ puts "\n  Note: Capistrano will take a long time to run.\n  You just have to wai
 puts "\n--------------------------------------------------"
 
 begin
-  if deploy_option = nil
+  if deploy_option == nil
     deploy_option = ''
   end
   deploy_option = ask("How do we want to deploy? (heroku/capistrano)")
@@ -503,18 +535,6 @@ requireDir('./gulp/tasks', { recurse: true });
 end
 
 # ask to push to repo at the end
-#
-#
-#
-
-# use application layout from amw-home
-# all views/layouts files
-#
-# application.html.erb
-#   viewport metatag
-#  <!--[if lt IE 8]>
-#    <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-#  <![endif]-->
 #
 #
 #
