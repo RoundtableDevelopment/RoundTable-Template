@@ -337,16 +337,40 @@ puts "\n--------------------------------------------------"
 
 if yes?("Do you need to be able to upload files? (yes/no)")
   gem "paperclip", "~> 5.0.0"
-  # aws-sdk gem added
-  #
-  # some config options
-  # region bucket name? may not be set up
-  #
-  #
-  #
-  #
-  #
+  gem "aws-sdk"
+
   run "bundle install"
+
+  insert_into_file "config/environments/production.rb", after: "config.active_record.dump_schema_after_migration = false\n" do <<-EOF
+
+  # Paperclip settings
+  config.paperclip_defaults = {
+    storage: :s3,
+    s3_credentials: {
+      bucket: ENV.fetch('S3_BUCKET_NAME'),
+      access_key_id: ENV.fetch('AWS_ACCESS_KEY_ID'),
+      secret_access_key: ENV.fetch('AWS_SECRET_ACCESS_KEY'),
+      s3_region: ENV.fetch('S3_REGION')
+    }
+  }
+  EOF
+  end
+
+  insert_into_file "config/environments/development.rb", after: "config.file_watcher = ActiveSupport::EventedFileUpdateChecker\n" do <<-EOF
+
+  # Paperclip settings
+  config.paperclip_defaults = {
+    storage: :s3,
+    s3_credentials: {
+      bucket: ENV.fetch('S3_BUCKET_NAME'),
+      access_key_id: ENV.fetch('AWS_ACCESS_KEY_ID'),
+      secret_access_key: ENV.fetch('AWS_SECRET_ACCESS_KEY'),
+      s3_region: ENV.fetch('S3_REGION')
+    }
+  }
+  EOF
+  end
+
   git add: '.', commit: '-m "Paperclip added for file uploads"'
 end
 
@@ -357,10 +381,10 @@ puts "\n  Note: Capistrano will take a long time to run.\n  You just have to wai
 puts "\n--------------------------------------------------"
 
 begin
+  deploy_option = ask("How do we want to deploy? (heroku/capistrano)")
   if deploy_option == nil
     deploy_option = ''
   end
-  deploy_option = ask("How do we want to deploy? (heroku/capistrano)")
   if deploy_option.downcase == 'heroku'
     gem 'rails_12factor'
     run "bundle install"
