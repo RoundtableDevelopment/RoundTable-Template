@@ -562,3 +562,14 @@ end
 #
 #
 #
+
+# Pushes to github if we have repo established
+puts "--------------------------------------------------"
+puts "\n              Push to Github"
+puts "\n--------------------------------------------------"
+if yes? ("Do you want to push to github now? (yes/no)")
+  repo = ask ("What is the URL for the remote repo?")
+  run "git remote add origin #{repo}"
+  run "git remote -v"
+  run "git push -u origin master"
+end
